@@ -4,7 +4,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:in_app_update/in_app_update.dart';
-import 'package:package_info/package_info.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 import 'error_material_alert.dart';
 import 'update_cupertino_alert.dart';
@@ -112,9 +112,16 @@ class NativeUpdater {
 
       if (_updateInfo.updateAvailability == UpdateAvailability.updateAvailable) {
         if (_forceUpdate == true) {
-          InAppUpdate.performImmediateUpdate().catchError((e) => developer.log(e.toString()));
+          final result = InAppUpdate.performImmediateUpdate().catchError((e) {
+            developer.log(e.toString());
+          });
+          developer.log(result.toString());
         } else if (_forceUpdate == false) {
-          InAppUpdate.startFlexibleUpdate().catchError((e) => developer.log(e.toString()));
+          final result = await InAppUpdate.startFlexibleUpdate().catchError((e) {
+            developer.log(e.toString());
+          });
+
+          developer.log(result.toString());
         }
       }
     } on PlatformException catch (e) {
