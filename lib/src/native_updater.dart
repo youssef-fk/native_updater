@@ -31,7 +31,7 @@ class NativeUpdater {
   NativeUpdater._internal();
 
   /// Displaying update alert
-  static displayUpdateAlert(
+  static Future<void> displayUpdateAlert(
     BuildContext context, {
     required bool forceUpdate,
     String? appStoreUrl,
@@ -59,29 +59,30 @@ class NativeUpdater {
     _nativeUpdaterInstance._iOSCloseButtonLabel = iOSCloseButtonLabel;
     _nativeUpdaterInstance._iOSIgnoreButtonLabel = iOSIgnoreButtonLabel;
     _nativeUpdaterInstance._iOSAlertTitle = iOSAlertTitle;
-    _nativeUpdaterInstance._requireUpdateText = requireUpdateText ?? 'requires that you update to the latest version. You cannot use this app until it is updated.';
-    _nativeUpdaterInstance._recommendUpdateText = recommendUpdateText ?? 'recommends that you update to the latest version. You can keep using this app while downloading the update.';
+    _nativeUpdaterInstance._requireUpdateText = requireUpdateText ??
+        'requires that you update to the latest version. You cannot use this app until it is updated.';
+    _nativeUpdaterInstance._recommendUpdateText = recommendUpdateText ??
+        'recommends that you update to the latest version. You can keep using this app while downloading the update.';
     _nativeUpdaterInstance._errorText = errorText;
     _nativeUpdaterInstance._errorCloseButtonLabel = errorCloseButtonLabel;
     _nativeUpdaterInstance._errorSubtitle = errorSubtitle;
+
     /// Show the alert based on current platform
     if (Platform.isIOS) {
-      _nativeUpdaterInstance._showCupertinoAlertDialog();
+      await _nativeUpdaterInstance._showCupertinoAlertDialog();
     } else {
-      _nativeUpdaterInstance._showMaterialAlertDialog();
+      await _nativeUpdaterInstance._showMaterialAlertDialog();
     }
   }
 
-  void _showCupertinoAlertDialog() {
+  Future<void> _showCupertinoAlertDialog() async {
     /// Switch description based on whether it is force update or not.
     String selectedDefaultDescription;
 
     if (_forceUpdate) {
-      selectedDefaultDescription =
-          '$_appName $_requireUpdateText';
+      selectedDefaultDescription = '$_appName $_requireUpdateText';
     } else {
-      selectedDefaultDescription =
-          '$_appName $_recommendUpdateText';
+      selectedDefaultDescription = '$_appName $_recommendUpdateText';
     }
 
     Widget alert = UpdateCupertinoAlert(
@@ -95,7 +96,7 @@ class NativeUpdater {
       alertTitle: _iOSAlertTitle ?? 'Update Available',
     );
 
-    showDialog(
+    await showDialog(
       context: _context,
       barrierDismissible: _forceUpdate ? false : true,
       builder: (BuildContext context) {
@@ -104,31 +105,28 @@ class NativeUpdater {
     );
   }
 
-  void _showMaterialAlertDialog() async {
+  Future<void> _showMaterialAlertDialog() async {
     /// In App Update Related
     try {
       AppUpdateInfo _updateInfo = await InAppUpdate.checkForUpdate();
 
       if (_updateInfo.updateAvailability == UpdateAvailability.updateAvailable) {
         if (_forceUpdate == true) {
-          InAppUpdate.performImmediateUpdate()
-              .catchError((e) => developer.log(e.toString()));
+          InAppUpdate.performImmediateUpdate().catchError((e) => developer.log(e.toString()));
         } else if (_forceUpdate == false) {
-          InAppUpdate.startFlexibleUpdate()
-              .catchError((e) => developer.log(e.toString()));
+          InAppUpdate.startFlexibleUpdate().catchError((e) => developer.log(e.toString()));
         }
       }
     } on PlatformException catch (e) {
       developer.log(e.code.toString());
 
-      showDialog(
+      await showDialog(
         context: _context,
         builder: (BuildContext context) {
           return ErrorMaterialAlert(
             appName: _appName,
-            description:
-                _errorText ?? 'This version of $_appName was not installed from Google Play Store.',
-            errorCloseButtonLabel:_errorCloseButtonLabel,
+            description: _errorText ?? 'This version of $_appName was not installed from Google Play Store.',
+            errorCloseButtonLabel: _errorCloseButtonLabel,
             errorSubtitle: _errorSubtitle,
           );
         },
